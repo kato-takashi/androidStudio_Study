@@ -8,8 +8,9 @@ import android.view.MotionEvent;
 import android.graphics.Color;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by KATOtakashi on 2015/03/10.
@@ -17,7 +18,6 @@ import android.view.SurfaceView;
 public class GameView extends SurfaceView implements Droid.Callback, SurfaceHolder.Callback{
 
     private static final int START_GROUND_HEIGHT = 50;
-    private Ground ground;
     private Droid droid;
     private static final int MAX_TOUCH_TIME = 500; //msec
     private static final int GROUND_MOVE_TO_LEFT = 10;
@@ -26,6 +26,15 @@ public class GameView extends SurfaceView implements Droid.Callback, SurfaceHold
 
     private static final long FPS = 60;
 
+    private static final int ADD_GROUND_COUNT = 5;
+
+    private static final int GROUND_WIDTH  = 340;
+    private static final int GROUND_BLOCK_HEIGHT = 100;
+
+    private Ground lastGround;
+
+    private final List<Ground> groundList = new ArrayList<Ground>();
+    private final Random rand = new Random();
 
     private class DrawThread extends Thread{
         boolean isFinished;
@@ -78,9 +87,6 @@ public class GameView extends SurfaceView implements Droid.Callback, SurfaceHold
         stopDrawThread();
     }
 
-
-
-
     public GameView(Context context){
         super(context);
         getHolder().addCallback(this);
@@ -95,26 +101,55 @@ public class GameView extends SurfaceView implements Droid.Callback, SurfaceHold
         if(droid == null){
             Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.droid);
             droid = new Droid(bitmap, 0, 0, this);
+
+            //開始時に表示される地面
+            lastGround = new Ground(0, height - START_GROUND_HEIGHT, width, height);
+            groundList.add(lastGround);
         }
 
-        if(ground == null){
-            ground = new Ground(0, height-START_GROUND_HEIGHT, width, height);
+        if(lastGround.isShown(width, height)){
+            for(int i = 0; i < ADD_GROUND_COUNT; i++){
+                int left = lastGround.rect.right;
+                int groundHeight = rand.nextInt(height/GROUND_BLOCK_HEIGHT) * GROUND_BLOCK_HEIGHT / 2 + START_GROUND_HEIGHT;
+                lastGround = new Ground(left, height - groundHeight, left + GROUND_WIDTH, height);
+                groundList.add(lastGround);
+            }
+        }
+
+        for(int i = 0; i < groundList.size(); i++){
+            Ground ground = groundList.get(i);
+            if(ground.isAvailable()){
+                ground.move(GROUND_MOVE_TO_LEFT);
+                if(ground.isShown(width, height)){
+                    ground.draw(canvas);
+                }
+            }else{
+                groundList.remove(ground);
+                i--;
+            }
         }
 
         droid.move();
         droid.draw(canvas);
 
-        ground.move(GROUND_MOVE_TO_LEFT);
-        ground.draw(canvas);
     }
 
     @Override
-    public int getDistanceFromGround(Droid droid){
-        boolean horizontal = !(droid.rect.left >= ground.rect.right || droid.rect.right <= ground.rect.left);
-        if(!horizontal){
-            return Integer.MAX_VALUE;
+    public int getDistanceFromGround(Droid droid) {
+        int width = getWidth();
+        int height = getHeight();
+
+        for(int i=0; i < groundList.size(); i++){
+            Ground ground = groundList.get(i);
+            if(!ground.isShown(width, height)){
+                continue;
+            }
+            boolean horizontal = !(droid.rect.left >= ground.rect.right || droid.rect.right <= ground.rect.right);
+            if(horizontal){
+                return ground.rect.top -droid.rect.bottom;
+            }
         }
-        return ground.rect.top - droid.rect.bottom;
+        return Integer.MAX_VALUE;
     }
 
 

@@ -23,4 +23,12 @@ public class Ground {
     public void move(int moveToLeft){
         rect.offset(-moveToLeft, 0);
     }
+
+    public boolean isShown(int width, int height){
+        return rect.intersects(0, 0, width, height);
+    }
+
+    public boolean isAvailable(){
+        return rect.right > 0;
+    }
 }
