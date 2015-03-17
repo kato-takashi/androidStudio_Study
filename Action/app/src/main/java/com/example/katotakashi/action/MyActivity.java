@@ -1,12 +1,13 @@
 package com.example.katotakashi.action;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
-public class MyActivity extends ActionBarActivity {
+public class MyActivity extends Activity implements GameView.Callback {
 
     private GameView gameView;
 
@@ -15,6 +16,7 @@ public class MyActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         gameView = new GameView(this);
+        gameView.setCallback(this);
         setContentView(gameView);
 
     }
@@ -40,5 +42,10 @@ public class MyActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onGameOver(){
+        Toast.makeText(this, "Game Over", Toast.LENGTH_LONG).show();
     }
 }

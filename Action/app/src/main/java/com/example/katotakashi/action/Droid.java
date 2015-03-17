@@ -11,14 +11,13 @@ public class Droid {
     private static final float WEIGHT = GRAVITY * 60;
     private float acceleration = 0;
 
-    public void jump(float power){
-        acceleration = power * WEIGHT;
-    }
-
     private final Paint paint = new Paint();
     private Bitmap bitmap;
     final Rect rect;
     private final Callback callback;
+
+    private static final int COLLISON_MARGIN_LEFT = 15;
+    private static final int COLLISON_MARGIN_RIGHT = 15;
 
 
     public interface Callback{
@@ -27,13 +26,19 @@ public class Droid {
 
 
     public Droid(Bitmap bitmap, int left, int top, Callback callback){
-        this.rect = new Rect(left, top, left + bitmap.getWidth(), top + bitmap.getHeight());
+        int rectLeft = left + COLLISON_MARGIN_LEFT;
+        int rectRight = left + bitmap.getWidth() - COLLISON_MARGIN_RIGHT;
+        this.rect = new Rect(rectLeft, top, rectRight, top + bitmap.getHeight());
         this.bitmap = bitmap;
         this.callback = callback;
     }
 
     public void draw(Canvas canvas){
-        canvas.drawBitmap(bitmap, rect.left, rect.top, paint);
+        canvas.drawBitmap(bitmap, rect.left - COLLISON_MARGIN_LEFT, rect.top, paint);
+    }
+
+    public void jump(float time){
+        acceleration = time * WEIGHT;
     }
 
     public void move(){
@@ -45,6 +50,8 @@ public class Droid {
         rect.offset(0, -Math.round(acceleration)); //下へ
     }
 
-
+    public void shutdown(){
+        acceleration = 0;
+    }
 
 }
